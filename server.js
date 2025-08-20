@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
-// Forward requests to Toobit API
+// Universal proxy route
 app.all("*", async (req, res) => {
   try {
     const toobitUrl = `https://api.toobit.com${req.originalUrl}`;
