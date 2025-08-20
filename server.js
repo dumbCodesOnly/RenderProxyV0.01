@@ -9,15 +9,30 @@ app.all("*", async (req, res) => {
   try {
     const toobitUrl = `https://api.toobit.com${req.originalUrl}`;
 
+    // Forward the exact headers that ToobitClient sends
+    const forwardHeaders = {
+      "Content-Type": "application/json",
+      "User-Agent": "TradingExpert/1.0"
+    };
+
+    // Forward Toobit authentication headers (TB-ACCESS-* format)
+    if (req.headers["tb-access-key"]) {
+      forwardHeaders["TB-ACCESS-KEY"] = req.headers["tb-access-key"];
+    }
+    if (req.headers["tb-access-sign"]) {
+      forwardHeaders["TB-ACCESS-SIGN"] = req.headers["tb-access-sign"];
+    }
+    if (req.headers["tb-access-timestamp"]) {
+      forwardHeaders["TB-ACCESS-TIMESTAMP"] = req.headers["tb-access-timestamp"];
+    }
+    if (req.headers["tb-access-passphrase"]) {
+      forwardHeaders["TB-ACCESS-PASSPHRASE"] = req.headers["tb-access-passphrase"];
+    }
+
     const response = await fetch(toobitUrl, {
       method: req.method,
-      headers: {
-        "Content-Type": "application/json",
-        "X-TOOBIT-APIKEY": process.env.TOOBIT_API_KEY,
-        "X-TOOBIT-SIGN": req.headers["x-toobit-sign"] || "",
-        "X-TOOBIT-TIMESTAMP": req.headers["x-toobit-timestamp"] || "",
-      },
-      body: req.method !== "GET" ? JSON.stringify(req.body) : undefined,
+      headers: forwardHeaders,
+      body: req.method !== "GET" && req.body ? JSON.stringify(req.body) : undefined,
     });
 
     const data = await response.json();
